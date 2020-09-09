@@ -48,7 +48,7 @@ const addToFavorites = ({ userId,cityKey,cityName,countryName }) => {
 const getFavoriteCities = ({userId}) => {
   console.log('database receives ', userId)
   return db('favorites')
-  .select('city_key')
+  .select('city_key', 'city_name', 'country_name')
   .where({user_id: userId})
 }
 
@@ -58,10 +58,18 @@ const getCityNames = ({userId}) => {
   .where({user_id: userId})
 }
 
+const removeFromFavorites = ({userId, cityKey}) => {
+  console.log('remove (in the DB) gets ', userId, cityKey)
+  return db('favorites')
+  .where({city_key: cityKey, user_id: userId })
+  .del()
+}
+
 module.exports = {
   findUser,
   createUser,
   getFavoriteCities,
   addToFavorites,
-  getCityNames
+  getCityNames,
+  removeFromFavorites
 };

@@ -41,18 +41,6 @@ app.use((req, res, next) => {
     next();
 });
 
-
-// *****TRY TO MAKE THIS FOR THE FAVORITES******
-// app.get('/getcities', (req,res) =>{
-//     DB.getcities()
-//     .then(data => {
-//         res.send(data)
-//     })
-//     .catch (err => {
-//         console.log('PAY ATTENTION TO GET CITIES => ',err)
-//     })
-// })
-
 const sessionChecker = (req, res, next) => {
   if (req.session.user && req.cookies.user_sid) {
       res.send({redirect: '/'});
@@ -98,7 +86,7 @@ app.route('/login')
             } else {
                 console.log('success ' )
                 req.session.user = user[0];
-                res.send({user});
+                res.send({user:user, redirect: '/'});
             }
         })
         .catch(error => {
@@ -127,26 +115,17 @@ app.route('/favorites')
                 )
         })
         .catch(err => {
-            
             console.log(err)
         })
     })
     
+
+// RE-ENABLE THIS FUNCTION!!!!
 const fetchWeatherByKeys = (favList) => {
     return Promise.all(favList.map(item => {
         return axios(`http://dataservice.accuweather.com/currentconditions/v1/${item.city_key}?apikey=utoFZGZYIOvMSbYro0m1L0zHojNT4pk3`)
-        .then(res => res)
+        .then(res => res.data)
     }))
-}
-
-const filterRelevantData = (wholeData) => {
-    let filteredWeather = wholeData.map(item => {
-        let extractData = {}
-        extractData = item.data
-        return extractData
-    })
-    console.log(filteredWeather)
-    return filteredWeather
 }
 
 app.route('/favoritelist')
@@ -156,24 +135,30 @@ app.route('/favoritelist')
         .then(favList => {
             console.log('from server ', favList)
             return fetchWeatherByKeys(favList)
-        }).then( wholeData => {
-            console.log('after function in server (data) ', wholeData[0].data[0])
-            return (filterRelevantData(wholeData))
+        }).then( fetchedWeather => {
+            console.log('after function in server (data) ', fetchedWeather )
+            res.send(fetchedWeather)
         })
-        .then(
-            filteredWeather => {
-                console.log('console log of test ', filteredWeather)
-                res.send(filteredWeather)
-            }
-        )
-        // .then(  
-        //     res.send(test)
-        // )
         .catch(
             err => {
             console.log(err)
             })
 })
+
+app.route('/removefavorite')
+    .post((req,res) => {
+        console.log(req.body)
+        DB.removeFromFavorites(req.body)
+        .then(removal => {
+            console.log(removal)
+            res.send(
+                {message: 'city removed from your favorite section'}
+                )
+        })
+        .catch(err => {
+            console.log(err)
+        })
+    })
 
 app.route('/favoritecitylist')
     .post((req,res) => {
@@ -215,4 +200,4 @@ app.listen(app.get('port'), () => {
 });
 
 
-favList = [];
+// favList = [];
